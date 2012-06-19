@@ -85,7 +85,13 @@ echo "==> done..."
 echo -e "\n=> Installing Ruby $ruby_version (this will take a while)..."
 echo -e "=> More information about installing rubies can be found at http://rvm.beginrescueend.com/rubies/installing/ \n"
 
-rvm install $ruby_version
+[[ -s "/usr/local/rvm/scripts/rvm" ]] && . "/usr/local/rvm/scripts/rvm"  # Load RVM into a shell session *as a function*
+
+if [ `whoami` == 'root' ] ; then
+/usr/local/rvm/bin/rvm install $ruby_version
+else
+~/.rvm/bin/rvm install $ruby_version
+fi
 
 echo -e "\n==> done..."
 echo -e "\n=> Using $ruby_version and setting it as default for new shells..."
@@ -99,6 +105,8 @@ echo "==> done..."
 ################################################################################
 
 ## Install Chef Gem ##
+[[ -s "/usr/local/rvm/scripts/rvm" ]] && . "/usr/local/rvm/scripts/rvm"  # Load RVM into a shell session *as a function*
+
 if [ `whoami` == 'root' ] ; then
 gem install chef --no-ri --no-rdoc
 else
