@@ -22,7 +22,7 @@ log_file="install.log"
 
 sudo apt-get update
 
-## TODO: pulled these from `rvm requirements` - might want to script this parsing
+# TODO: pulled these from `rvm requirements` - might want to script this parsing
 sudo apt-get install -y build-essential openssl libreadline6 libreadline6-dev \
 curl git-core zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-dev sqlite3 \
 libxml2-dev libxslt1-dev autoconf libc6-dev libncurses5-dev automake libtool bison \
@@ -32,10 +32,12 @@ subversion libmysqlclient-dev nodejs
 
 ## Install RVM ##
 
-echo -e "\n=> Installing RVM the Ruby enVironment Manager http://rvm.beginrescueend.com/rvm/install/ \n"
+echo -e "\n=> Installing RVM...\n"
 curl -O -L -k https://raw.github.com/wayneeseguin/rvm/master/binscripts/rvm-installer
 chmod +x rvm-installer
+
 "$PWD/rvm-installer" > $log_file 2>&1
+
 [[ -f rvm-installer ]] && rm -f rvm-installer
 
 ################################################################################
@@ -85,6 +87,7 @@ echo "==> done..."
 echo -e "\n=> Installing Ruby $ruby_version (this will take a while)..."
 echo -e "=> More information about installing rubies can be found at http://rvm.beginrescueend.com/rubies/installing/ \n"
 
+# Load RVM into shell
 [[ -s "/usr/local/rvm/scripts/rvm" ]] && . "/usr/local/rvm/scripts/rvm"  # Load RVM into a shell session *as a function*
 
 if [ `whoami` == 'root' ] ; then
@@ -97,6 +100,7 @@ echo -e "\n==> done..."
 echo -e "\n=> Using $ruby_version and setting it as default for new shells..."
 echo "=> More information about Rubies can be found at http://rvm.beginrescueend.com/rubies/default/"
 
+# Load RVM into shell
 [[ -s "/usr/local/rvm/scripts/rvm" ]] && . "/usr/local/rvm/scripts/rvm"  # Load RVM into a shell session *as a function*
 rvm --default use $ruby_version
 
@@ -105,6 +109,8 @@ echo "==> done..."
 ################################################################################
 
 ## Install Chef Gem ##
+
+# Load RVM into shell
 [[ -s "/usr/local/rvm/scripts/rvm" ]] && . "/usr/local/rvm/scripts/rvm"  # Load RVM into a shell session *as a function*
 
 if [ `whoami` == 'root' ] ; then
