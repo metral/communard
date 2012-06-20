@@ -5,6 +5,7 @@
 # - RVM
 # - Ruby
 # - Chef
+# - Uploads RCBOps Cookbooks & Roles to Hosted Chef
 
 # Author: Mike Metral
 # Company: Rackspace
@@ -25,8 +26,12 @@ chef_repo_path=~/chef-repo
 ## Welcome ##
 
 echo -e "\n** This script is intended for a Linux OpsCode Chef Workstation **"
-echo -e "\n** The packages that will be installed & setup: RVM, Ruby & Chef **"
-echo -e "Logs will be written to: $log_file"
+echo -e "\n** The packages & configuations will be installed & setup:"
+echo -e "     -- RVM"
+echo -e "     -- Ruby"
+echo -e "     -- Chef"
+echo -e "     -- Upload RCBOps Cookbooks + Roles to Hosted Chef on OpsCode"
+echo -e "\n** Logs will be written to: $log_file **"
 
 ################################################################################
 
