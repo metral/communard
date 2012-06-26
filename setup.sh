@@ -22,6 +22,7 @@
 ruby_version="1.9.3"
 log_file="install.log"
 chef_repo_path=~/chef-repo
+chef_keys_config_path=.chef/
 
 source setup.conf
 
@@ -194,8 +195,9 @@ setup_workstation_repo() {
         >> $log_file 2>&1
     echo "==> done."
 
-    echo -e "\n=> Copying Chef configuration directory..."
-    cp -rf .chef $chef_repo_path/
+    echo -e "\n=> Copying Chef configuration directory (.chef)..."
+    #cp -rf .chef $chef_repo_path/
+    cp -rf $chef_keys_config_path $chef_repo_path/
 
     echo "==> done."
 }
@@ -230,7 +232,7 @@ goodbye() {
 }
 
 #-------------------------------------------------------------------------------
-## Setup & configure the chef-workstation
+## Setup & configure the chef-workstation specific files & settings
 
 setup_chef_workstation() {
     setup_workstation_repo
@@ -238,10 +240,24 @@ setup_chef_workstation() {
 }
 
 #-------------------------------------------------------------------------------
-## Setup & configure the chef-client
+## Setup & configure the chef-client specific settings
 
 setup_chef_client() {
-    echo "In Chef Client"
+    mkdir -p /etc/chef
+
+    # Copy key & conf for initial node setup & configure it
+    cp -rf $chef_keys_config_path/*-validator.pem /etc/chef/
+    cp -rf client_configs/client-initial_setup.rb /etc/chef/client.rb
+    sed -i 's/ORGNAME/'$ORGNAME'/g' /etc/chef/client.rb
+    chef-client
+    rm -rf /etc/chef/*-validator.pem
+    rm -rf /etc/chef/client.rb
+
+    # Copy key & config for proceeding new client usage
+    cp -rf client_configs/client.rb /etc/chef/
+    sed -i 's/ORGNAME/'$ORGNAME'/g' /etc/chef/client.rb
+    sed -i 's/CLIENT_NAME/'$CLIENT_NAME'/g' /etc/chef/client.rb
+    chef-client
 }
 
 #-------------------------------------------------------------------------------
@@ -261,6 +277,7 @@ base_install() {
 ## Main ##
 
 # Perform base install of RVM, Ruby, Ruby Gems & Chef
+# This base install applies to both Chef Workstation & Client
 base_install
 
 # Setup chef-workstation, if enabled
