@@ -22,7 +22,8 @@
 ruby_version="1.9.3"
 log_file="install.log"
 chef_repo_path=~/chef-repo
-chef_keys_config_path=.chef/
+chef_keys_config_path=~/.chef
+client_configs_path=~/client_configs
 
 source setup.conf
 
@@ -247,14 +248,14 @@ setup_chef_client() {
 
     # Copy key & conf for initial node setup & configure it
     cp -rf $chef_keys_config_path/*-validator.pem /etc/chef/
-    cp -rf client_configs/client-initial_setup.rb /etc/chef/client.rb
+    cp -rf $client_configs_path/client-initial_setup.rb /etc/chef/client.rb
     sed -i 's/ORGNAME/'$ORGNAME'/g' /etc/chef/client.rb
     chef-client
     rm -rf /etc/chef/*-validator.pem
     rm -rf /etc/chef/client.rb
 
     # Copy key & config for proceeding new client usage
-    cp -rf client_configs/client.rb /etc/chef/
+    cp -rf $client_configs_path/client.rb /etc/chef/
     sed -i 's/ORGNAME/'$ORGNAME'/g' /etc/chef/client.rb
     sed -i 's/CLIENT_NAME/'$CLIENT_NAME'/g' /etc/chef/client.rb
     chef-client
