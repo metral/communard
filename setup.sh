@@ -190,13 +190,13 @@ install_chef_gem() {
 ## Setup Chef Workstation Repo ##
 
 setup_workstation_repo() {
-    echo -e "\n=> Cloning Chef Workstation skeleton chef-repo locally..."
+    echo -e "\n=> Cloning Chef Workstation chef-repo locally from git..."
 
     git clone git://github.com/opscode/chef-repo.git $chef_repo_path \
         >> $log_file 2>&1
     echo "==> done."
 
-    echo -e "\n=> Copying Chef configuration directory (.chef)..."
+    echo -e "\n=> Copying Chef config directory (.chef) into chef-repo..."
     #cp -rf .chef $chef_repo_path/
     cp -rf $chef_keys_config_path $chef_repo_path/
 
@@ -208,18 +208,18 @@ setup_workstation_repo() {
 
 upload_cookbooks_roles() {
     echo -e "\n=> Setting up cookbooks on Chef..."
-    echo -e "=> Cloning RCBOps chef-cookbooks locally..."
+    echo -e "=> Cloning RCBOps chef-cookbooks locally from git..."
     cd $chef_repo_path/cookbooks
     git clone --recursive git://github.com/rcbops/chef-cookbooks.git \
         >> $log_file 2>&1
     echo "==> done."
 
-    echo -e "=> Uploading RCBOps' cookbooks to Chef..."
+    echo -e "=> Uploading RCBOps' cookbooks to Chef Server..."
     cd $chef_repo_path/cookbooks/chef-cookbooks
     knife cookbook upload -o cookbooks --all >> $log_file 2>&1
     echo "==> done."
 
-    echo -e "=> Uploading RCBOps' roles to Chef..."
+    echo -e "=> Uploading RCBOps' roles to Chef Server..."
     rake roles >> $log_file 2>&1
     echo "==> done."
 }
