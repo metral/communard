@@ -21,21 +21,75 @@
 
 ruby_version="1.9.3"
 log_file="install.log"
+setup_conf=setup.conf
 chef_repo_path=~/chef-repo
-chef_keys_config_path=~/.chef
+chef_keys_config_path=~/chef
 client_configs_path=~/client_configs
 
-source setup.conf
+packages=( 'rvm' 'ruby' 'chef-client' )
+missing_packages=()
+
+#-------------------------------------------------------------------------------
+## Perform checks to make sure all is in its right place before installation
+
+check_chef_setup() {
+    if [ -d $chef_keys_config_path ] ; then
+        if [ ! -f $chef_keys_config_path/knife.rb ] ; then
+            echo "ERROR: Knife config file does not exist."
+            exit
+        fi
+
+        validation_key=`cat $chef_keys_config_path/knife.rb \
+            | grep validation_key | awk '{print $2}' | xargs basename`
+        client_key=`cat $chef_keys_config_path/knife.rb \
+            | grep client_key | awk '{print $2}' | xargs basename`
+
+        if [ ! -f $chef_keys_config_path/$validation_key ] ; then
+            echo "ERROR: Validator key does not exist."
+            exit
+        fi
+        if [ ! -f $chef_keys_config_path/$client_key ] ; then
+            echo "ERROR: Client key does not exist."
+            exit
+        fi
+    else
+        echo "ERROR: Chef keys/config directory does not exist: $chef_keys_config_path"
+        exit
+    fi
+}
+
+check_install_packages() {
+
+    for i in "${packages[@]}"
+    do
+        command -v $i >/dev/null 2>&1 || { missing_packages+=($i); }
+    done
+}
+
+preinstall_checks() {
+    check_chef_setup
+    check_install_packages
+}
+
+#-------------------------------------------------------------------------------
+## Determines if package needs to be installed
+
+package_needed() {
+    for i in "${missing_packages[@]}"
+    do
+        if [ "$1" == "$i" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
 
 #-------------------------------------------------------------------------------
 ## Welcome ##
 
 welcome() {
-    echo -e "\n** These main packages will be installed & setup:"
-    echo -e "     -- RVM"
-    echo -e "     -- Ruby"
-    echo -e "     -- Ruby Gems"
-    echo -e "     -- Chef"
+    echo -e "\n** This script will setup OpsCode Hosted Chef on your system **"
     echo -e "\n** Logs will be written to: $log_file **"
 }
 
@@ -229,7 +283,6 @@ upload_cookbooks_roles() {
 
 goodbye() {
     echo -e "\n** All done. Good-bye! **\n"
-    echo -e "\n** You should restart the machine for good measures. **\n"
 }
 
 #-------------------------------------------------------------------------------
@@ -249,15 +302,15 @@ setup_chef_client() {
     # Copy key & conf for initial node setup & configure it
     cp -rf $chef_keys_config_path/*-validator.pem /etc/chef/
     cp -rf $client_configs_path/client-initial_setup.rb /etc/chef/client.rb
-    sed -i 's/ORGNAME/'$ORGNAME'/g' /etc/chef/client.rb
+    sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
     chef-client
     rm -rf /etc/chef/*-validator.pem
     rm -rf /etc/chef/client.rb
 
     # Copy key & config for proceeding new client usage
     cp -rf $client_configs_path/client.rb /etc/chef/
-    sed -i 's/ORGNAME/'$ORGNAME'/g' /etc/chef/client.rb
-    sed -i 's/CLIENT_NAME/'$CLIENT_NAME'/g' /etc/chef/client.rb
+    sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
+    sed -i 's/CHEF_CLIENT_NODE_NAME/'$CHEF_CLIENT_NODE_NAME'/g' /etc/chef/client.rb
     chef-client
 }
 
@@ -267,30 +320,53 @@ setup_chef_client() {
 base_install() {
     welcome
     update_repos
-    install_dependencies
-    install_rvm
-    update_shell_config
-    source_shell_config
-    install_ruby
-    install_chef_gem
+
+    if package_needed rvm ; then
+        install_dependencies
+        install_rvm
+        update_shell_config
+        source_shell_config
+    fi
+
+    if package_needed ruby  ; then
+        install_ruby
+    fi
+
+    if package_needed chef-client  ; then
+        install_chef_gem
+    fi
+
+    echo -e "\n** Knife is ready to add cookbooks & edit environments **"
+    echo -e "\n** You should restart the machine for good measures **"
 }
 #-------------------------------------------------------------------------------
 ## Main ##
 
 # Perform base install of RVM, Ruby, Ruby Gems & Chef
 # This base install applies to both Chef Workstation & Client
-base_install
 
-# Setup chef-workstation, if enabled
-if [ "$CHEF_WORKSTATION" == "True" ] || [ "$CHEF_WORKSTATION" == "true" ] ||
-   [ "$CHEF_WORKSTATION" == "TRUE" ] ; then
-    setup_chef_workstation
+source setup.conf
+
+if [ "$CHEF_ORGNAME" == 'INSERT_CHEF_ORGNAME' ] ; then
+    echo "ERROR: Insert an organization name in $setup_conf"
+    exit
 fi
 
-# Setup chef-client, if enabled
-if [ "$CHEF_CLIENT" == "True" ] || [ "$CHEF_CLIENT" == "true" ] ||
-   [ "$CHEF_CLIENT" == "TRUE" ] ; then
-    setup_chef_client
+if preinstall_checks; then
+    base_install
+
+    # Setup chef-workstation, if enabled
+    if [ "$CHEF_WORKSTATION" == "True" ] || [ "$CHEF_WORKSTATION" == "true" ] ||
+        [ "$CHEF_WORKSTATION" == "TRUE" ] ; then
+        setup_chef_workstation
+    fi
+
+    # Setup chef-client, if enabled
+    if [ "$CHEF_CLIENT" == "True" ] || [ "$CHEF_CLIENT" == "true" ] ||
+        [ "$CHEF_CLIENT" == "TRUE" ] ; then
+        echo
+        setup_chef_client
+    fi
 fi
 
 goodbye
