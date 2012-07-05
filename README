@@ -1,0 +1,21 @@
+Description:
+------------
+This script will:
+
+    1. Setup OpsCode Hosted Chef on the system
+    2. Upload the Rackspace Cloud Builders System Operations (RCBOps) cookbooks
+        & roles to your Hosted OpsCode Chef account
+
+
+Install:
+--------
+1. Create Hosted Chef Server account on OpsCode
+    http://www.opscode.com/hosted-chef/
+2. Download the User Key, Organization Validator Key & Knife Config
+    http://wiki.opscode.com/display/chef/Setup+Opscode+User+and+Organization
+3. Store the the User Key, Organization Validator Key & Knife Config in ./chef/
+4. Modify setup.conf to install Chef Workstation and/or Chef Client
+    a. Mark which Chef component you'd like installed by labeling it "true"
+    b. If Chef Client was chosen, make sure to enter in the proper OpsCode
+    Organization name
+5. Run ./setup.sh
