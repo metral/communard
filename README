@@ -16,6 +16,5 @@ Install:
 3. Store the the User Key, Organization Validator Key & Knife Config in ./chef/
 4. Modify setup.conf to install Chef Workstation and/or Chef Client
     a. Mark which Chef component you'd like installed by labeling it "true"
-    b. If Chef Client was chosen, make sure to enter in the proper OpsCode
-    Organization name
+    b. Make sure to enter in the proper OpsCode Organization name
 5. Run ./setup.sh
