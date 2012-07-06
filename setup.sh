@@ -248,38 +248,38 @@ install_chef_gem() {
 ## Setup Chef Workstation Repo ##
 
 setup_workstation_repo() {
-    echo -e "\n=> Cloning Chef Workstation chef-repo locally from git..."
+    echo -e "==> Cloning Chef Workstation chef-repo locally from git..."
 
     git clone git://github.com/opscode/chef-repo.git $chef_repo_path \
         >> $log_file 2>&1
-    echo "==> done."
+    echo "===> done."
 
-    echo -e "\n=> Copying Chef config directory (.chef) into chef-repo..."
-    #cp -rf .chef $chef_repo_path/
-    cp -rf $chef_keys_config_path $chef_repo_path/
+    echo -e "==> Copying Chef config directory (.chef) into chef-repo..."
+    cp -rf $chef_keys_config_path $chef_repo_path/.chef/
 
-    echo "==> done."
+    echo "===> done."
 }
 
 #-------------------------------------------------------------------------------
 ## Upload RCBOps' Cookbooks & Roles to Hosted Chef ##
 
 upload_cookbooks_roles() {
-    echo -e "\n=> Setting up cookbooks on Chef..."
-    echo -e "=> Cloning RCBOps chef-cookbooks locally from git..."
+    echo -e "==> Setting up cookbooks on Chef..."
+    echo -e "===> Cloning RCBOps chef-cookbooks locally from git..."
     cd $chef_repo_path/cookbooks
     git clone --recursive git://github.com/rcbops/chef-cookbooks.git \
         >> $log_file 2>&1
-    echo "==> done."
+    echo "====> done."
 
-    echo -e "=> Uploading RCBOps' cookbooks to Chef Server..."
+    echo -e "===> Uploading RCBOps' cookbooks to Chef Server..."
     cd $chef_repo_path/cookbooks/chef-cookbooks
     knife cookbook upload -o cookbooks --all >> $log_file 2>&1
-    echo "==> done."
+    echo "====> done."
 
-    echo -e "=> Uploading RCBOps' roles to Chef Server..."
+    echo -e "===> Uploading RCBOps' roles to Chef Server..."
     rake roles >> $log_file 2>&1
-    echo "==> done."
+    echo "====> done."
+    echo "===> done."
 }
 
 #-------------------------------------------------------------------------------
@@ -293,14 +293,17 @@ goodbye() {
 ## Setup & configure the chef-workstation specific files & settings
 
 setup_chef_workstation() {
+    echo -e "\n=> Setting up Chef Workstation..."
     setup_workstation_repo
     upload_cookbooks_roles
+    echo "==> done."
 }
 
 #-------------------------------------------------------------------------------
 ## Setup & configure the chef-client specific settings
 
 setup_chef_client() {
+    echo -e "\n=> Setting up Chef Client..."
     mkdir -p /etc/chef
 
     # Copy key & conf for initial node setup & configure it
@@ -316,6 +319,7 @@ setup_chef_client() {
     sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
     sed -i 's/CHEF_CLIENT_NODE_NAME/'$CHEF_CLIENT_NODE_NAME'/g' /etc/chef/client.rb
     chef-client
+    echo "==> done."
 }
 
 #-------------------------------------------------------------------------------
@@ -340,13 +344,13 @@ base_install() {
         install_chef_gem
     fi
 
-    echo -e "\n** Knife is ready to add cookbooks & edit environments **"
-    echo -e "\n** You should restart the machine for good measures **"
+    echo -e "\n** Chef is configured on the system **"
+    echo -e "\n** You should restart the system for good measures **"
 }
 #-------------------------------------------------------------------------------
 ## Main ##
 
-# Perform base install of RVM, Ruby, Ruby Gems & Chef
+# Perform base install
 # This base install applies to both Chef Workstation & Client
 
 source setup.conf
@@ -368,7 +372,6 @@ if preinstall_checks; then
     # Setup chef-client, if enabled
     if [ "$CHEF_CLIENT" == "True" ] || [ "$CHEF_CLIENT" == "true" ] ||
         [ "$CHEF_CLIENT" == "TRUE" ] ; then
-        echo
         setup_chef_client
     fi
 fi
