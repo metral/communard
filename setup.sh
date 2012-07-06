@@ -35,7 +35,8 @@ missing_packages=()
 check_chef_setup() {
     if [ -d $chef_keys_config_path ] ; then
         if [ ! -f $chef_keys_config_path/knife.rb ] ; then
-            echo "ERROR: Knife config file does not exist."
+            echo -n "ERROR: Knife config file (knife.rb) does not exist in: "
+            echo $chef_keys_config_path
             exit
         fi
 
@@ -45,11 +46,14 @@ check_chef_setup() {
             | grep client_key | awk '{print $2}' | xargs basename`
 
         if [ ! -f $chef_keys_config_path/$validation_key ] ; then
-            echo "ERROR: Validator key does not exist."
+            echo -n "ERROR: Validation key ("$validation_key") "
+            echo -n "does not exist in: "
+            echo $chef_keys_config_path
             exit
         fi
         if [ ! -f $chef_keys_config_path/$client_key ] ; then
-            echo "ERROR: Client key does not exist."
+            echo -n "ERROR: Client key ("$client_key") does not exist in: "
+            echo $chef_keys_config_path
             exit
         fi
     else
