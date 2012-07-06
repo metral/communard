@@ -16,5 +16,4 @@ Install:
     http://wiki.opscode.com/display/chef/Setup+Opscode+User+and+Organization
 3. Modify setup.conf to install Chef Workstation and/or Chef Client
     a. Mark which Chef component you'd like installed by labeling it "true"
-    b. Make sure to enter in the proper OpsCode Organization name
 4. Run ./setup.sh

@@ -1,20 +1,16 @@
 ################################################################################
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# Installs & configures the environment for these main packages:
-# - RVM
-# - Ruby
-# - Ruby Gems
-# - OpsCode Chef
-
-# Also configures chef-workstation or chef-client appropriately
+# Installs & configures the environment an OpsCode Hosted Chef setup
 
 # Author: Mike Metral
 # Company: Rackspace
 # Dept: Cloud Builders
 # Email: mike.metral@rackspace.com
 # Date: 06/19/12
-# RVM + Ruby Install Credit: https://github.com/joshfng/railsready
+
+# Credits & Acknowledgements:
+# - RVM + Ruby Installation: https://github.com/joshfng/railsready
 
 #-------------------------------------------------------------------------------
 ## Configure script settings ##
@@ -25,9 +21,12 @@ setup_conf=setup.conf
 chef_repo_path=~/chef-repo
 chef_keys_config_path=~/chef
 client_configs_path=~/client_configs
-
 packages=( 'rvm' 'ruby' 'chef-client' )
+
+# These variables are NOT to be configured by user
 missing_packages=()
+CHEF_CLIENT_NODE_NAME=`hostname`
+CHEF_ORGNAME=""
 
 #-------------------------------------------------------------------------------
 ## Perform checks to make sure all is in its right place before installation
@@ -44,6 +43,9 @@ check_chef_setup() {
             | grep validation_key | awk '{print $2}' | xargs basename`
         client_key=`cat $chef_keys_config_path/knife.rb \
             | grep client_key | awk '{print $2}' | xargs basename`
+        CHEF_ORGNAME=`cat $chef_keys_config_path/knife.rb \
+            | grep validation_client_name | awk '{print $2}' \
+            | tr -d "\"" | cut -d '-' -f1`
 
         if [ ! -f $chef_keys_config_path/$validation_key ] ; then
             echo -n "ERROR: Validation key ("$validation_key") "
@@ -57,7 +59,8 @@ check_chef_setup() {
             exit
         fi
     else
-        echo "ERROR: Chef keys/config directory does not exist: $chef_keys_config_path"
+        echo -n "ERROR: Chef keys/config directory does not exist: "
+        echo $chef_keys_config_path
         exit
     fi
 }
@@ -112,7 +115,7 @@ update_repos() {
 install_dependencies() {
     echo -e "\n=> Installing RVM dependencies from repos..."
 
-    # TODO: pulled from `rvm requirements` - might want to script this parsing
+    # TODO: pulled from `rvm requirements` for Ubuntu - script this?
     sudo apt-get install -y build-essential openssl libreadline6 \
         libreadline6-dev curl git-core zlib1g zlib1g-dev libssl-dev \
         libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev \
@@ -128,10 +131,10 @@ install_dependencies() {
 install_rvm() {
     echo -e "\n=> Installing RVM..."
 
-    #TODO: fix line break of URL
     curl -O -L -k \
-        https://raw.github.com/wayneeseguin/rvm/master/binscripts/rvm-installer \
-        >> $log_file 2>&1
+    https://raw.github.com/wayneeseguin/rvm/master/binscripts/rvm-installer \
+    >> $log_file 2>&1
+
     chmod +x rvm-installer
     "$PWD/rvm-installer" >> $log_file 2>&1
 
@@ -317,7 +320,8 @@ setup_chef_client() {
     # Copy key & config for proceeding new client usage
     cp -rf $client_configs_path/client.rb /etc/chef/
     sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
-    sed -i 's/CHEF_CLIENT_NODE_NAME/'$CHEF_CLIENT_NODE_NAME'/g' /etc/chef/client.rb
+    sed -i 's/CHEF_CLIENT_NODE_NAME/'$CHEF_CLIENT_NODE_NAME'/g' \
+        /etc/chef/client.rb
     chef-client
     echo "==> done."
 }
