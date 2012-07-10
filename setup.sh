@@ -307,20 +307,21 @@ setup_chef_workstation() {
 
 setup_chef_client() {
     echo -e "\n=> Setting up Chef Client..."
-    mkdir -p /etc/chef
+    sudo rm -rf /etc/chef
+    sudo mkdir -p /etc/chef
 
     # Copy key & conf for initial node setup & configure it
-    cp -rf $chef_keys_config_path/*-validator.pem /etc/chef/
-    cp -rf $client_configs_path/client-initial_setup.rb /etc/chef/client.rb
-    sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
+    sudo cp -rf $chef_keys_config_path/*-validator.pem /etc/chef/
+    sudo cp -rf $client_configs_path/client-initial_setup.rb /etc/chef/client.rb
+    sudo sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
     chef-client
-    rm -rf /etc/chef/*-validator.pem
-    rm -rf /etc/chef/client.rb
+    sudo rm -rf /etc/chef/*-validator.pem
+    sudo rm -rf /etc/chef/client.rb
 
     # Copy key & config for proceeding new client usage
-    cp -rf $client_configs_path/client.rb /etc/chef/
-    sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
-    sed -i 's/CHEF_CLIENT_NODE_NAME/'$CHEF_CLIENT_NODE_NAME'/g' \
+    sudo cp -rf $client_configs_path/client.rb /etc/chef/
+    sudo sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
+    sudo sed -i 's/CHEF_CLIENT_NODE_NAME/'$CHEF_CLIENT_NODE_NAME'/g' \
         /etc/chef/client.rb
     chef-client
     echo "==> done."
