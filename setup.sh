@@ -19,8 +19,8 @@ ruby_version="1.9.3"
 log_file="install.log"
 setup_conf=setup.conf
 chef_repo_path=~/chef-repo
-chef_keys_config_path=./chef
-client_configs_path=~/client_configs
+chef_keys_config_path=`pwd`/chef
+client_configs_path=`pwd`/client_configs
 packages=( 'rvm' 'ruby' 'chef-client' )
 
 # These variables are NOT to be configured by user
