@@ -3,3 +3,4 @@
 Session.vim
 *.bak
 .chef
+.DS_Store*
