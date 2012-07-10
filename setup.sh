@@ -311,7 +311,10 @@ setup_chef_client() {
     sudo mkdir -p /etc/chef
 
     # Copy key & conf for initial node setup & configure it
-    sudo cp -rf $chef_keys_config_path/*-validator.pem /etc/chef/
+    validation_key=`cat $chef_keys_config_path/knife.rb \
+        | grep validation_key | awk '{print $2}' | xargs basename`
+
+    sudo cp -rf $chef_keys_config_path/$validation_key /etc/chef/
     sudo cp -rf $client_configs_path/client-initial_setup.rb /etc/chef/client.rb
     sudo sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
     chef-client
