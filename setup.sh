@@ -105,7 +105,7 @@ welcome() {
 
 update_repos() {
     echo -e "\n=> Updating apt-get repos..."
-    sudo apt-get update > $log_file 2>&1
+    apt-get update > $log_file 2>&1
     echo "==> done."
 }
 
@@ -116,7 +116,7 @@ install_dependencies() {
     echo -e "\n=> Installing RVM dependencies from repos..."
 
     # TODO: pulled from `rvm requirements` for Ubuntu - script this?
-    sudo apt-get install -y build-essential openssl libreadline6 \
+    apt-get install -y build-essential openssl libreadline6 \
         libreadline6-dev curl git-core zlib1g zlib1g-dev libssl-dev \
         libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev \
         autoconf libc6-dev libncurses5-dev automake \
@@ -238,11 +238,7 @@ install_chef_gem() {
 
     echo -e "\n=> Installing Chef Gem..."
 
-    if [ `whoami` == 'root' ] ; then
-        gem install chef --no-ri --no-rdoc >> $log_file 2>&1
-    else
-        sudo gem install chef --no-ri --no-rdoc >> $log_file 2>&1
-    fi
+    gem install chef --no-ri --no-rdoc >> $log_file 2>&1
 
     echo "==> done."
 }
@@ -251,13 +247,13 @@ install_chef_gem() {
 ## Setup Chef Workstation Repo ##
 
 setup_workstation_repo() {
-    echo -e "==> Cloning Chef Workstation chef-repo locally from git..."
+    echo -e "==> Cloning OpsCode Chef Workstation repo to $chef_repo_path..."
 
     git clone git://github.com/opscode/chef-repo.git $chef_repo_path \
         >> $log_file 2>&1
     echo "===> done."
 
-    echo -e "==> Copying Chef config directory (.chef) into chef-repo..."
+    echo -e "==> Copying your config $chef_keys_config_path to $chef_repo_path"
     cp -rf $chef_keys_config_path $chef_repo_path/.chef/
 
     echo "===> done."
@@ -267,19 +263,19 @@ setup_workstation_repo() {
 ## Upload RCBOps' Cookbooks & Roles to Hosted Chef ##
 
 upload_cookbooks_roles() {
-    echo -e "==> Setting up cookbooks on Chef..."
-    echo -e "===> Cloning RCBOps chef-cookbooks locally from git..."
+    echo -e "==> Setting up cookbooks on Hosted Chef..."
+    echo -e "===> Cloning RCBOps chef-cookbooks locally from github..."
     cd $chef_repo_path/cookbooks
     git clone --recursive git://github.com/rcbops/chef-cookbooks.git \
         >> $log_file 2>&1
     echo "====> done."
 
-    echo -e "===> Uploading RCBOps' cookbooks to Chef Server..."
+    echo -e "===> Uploading RCBOps' cookbooks to Hosted Chef Server..."
     cd $chef_repo_path/cookbooks/chef-cookbooks
     knife cookbook upload -o cookbooks --all >> $log_file 2>&1
     echo "====> done."
 
-    echo -e "===> Uploading RCBOps' roles to Chef Server..."
+    echo -e "===> Uploading RCBOps' roles to Hosted Chef Server..."
     rake roles >> $log_file 2>&1
     echo "====> done."
     echo "===> done."
@@ -307,24 +303,24 @@ setup_chef_workstation() {
 
 setup_chef_client() {
     echo -e "\n=> Setting up Chef Client..."
-    sudo rm -rf /etc/chef
-    sudo mkdir -p /etc/chef
+    rm -rf /etc/chef
+    mkdir -p /etc/chef
 
     # Copy key & conf for initial node setup & configure it
     validation_key=`cat $chef_keys_config_path/knife.rb \
         | grep validation_key | awk '{print $2}' | xargs basename`
 
-    sudo cp -rf $chef_keys_config_path/$validation_key /etc/chef/
-    sudo cp -rf $client_configs_path/client-initial_setup.rb /etc/chef/client.rb
-    sudo sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
+    cp -rf $chef_keys_config_path/$validation_key /etc/chef/
+    cp -rf $client_configs_path/client-initial_setup.rb /etc/chef/client.rb
+    sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
     chef-client
-    sudo rm -rf /etc/chef/*-validator.pem
-    sudo rm -rf /etc/chef/client.rb
+    rm -rf /etc/chef/*-validator.pem
+    rm -rf /etc/chef/client.rb
 
     # Copy key & config for proceeding new client usage
-    sudo cp -rf $client_configs_path/client.rb /etc/chef/
-    sudo sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
-    sudo sed -i 's/CHEF_CLIENT_NODE_NAME/'$CHEF_CLIENT_NODE_NAME'/g' \
+    cp -rf $client_configs_path/client.rb /etc/chef/
+    sed -i 's/CHEF_ORGNAME/'$CHEF_ORGNAME'/g' /etc/chef/client.rb
+    sed -i 's/CHEF_CLIENT_NODE_NAME/'$CHEF_CLIENT_NODE_NAME'/g' \
         /etc/chef/client.rb
     chef-client
     echo "==> done."
@@ -360,6 +356,11 @@ base_install() {
 
 # Perform base install
 # This base install applies to both Chef Workstation & Client
+
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root" 1>&2
+    exit 1
+fi
 
 source setup.conf
 
